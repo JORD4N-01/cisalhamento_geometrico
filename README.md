@@ -35,7 +35,8 @@ Horizontal:        Vertical:
 | Python | 3.10+ | Linguagem base |
 | NumPy | latest | Cálculo matricial e transformações |
 | Matplotlib | latest | Renderização do plano cartesiano |
-| Tkinter | built-in | Interface gráfica |
+| ttkbootstrap | 1.20+ | Interface gráfica moderna com tema dark |
+| Tkinter | built-in | Base para ttkbootstrap |
 
 ## Instalação
 
@@ -47,10 +48,10 @@ cd cisalhamento_geometrico
 
 2. Instale as dependências:
 ```bash
-pip install numpy matplotlib
+pip install numpy matplotlib ttkbootstrap
 ```
 
-> Tkinter já vem incluído na instalação padrão do Python. Não requer instalação separada.
+> ttkbootstrap é uma biblioteca moderna que substitui o Tkinter padrão com componentes estilizados e temas profissionais.
 
 ## Como Executar
 
@@ -65,18 +66,26 @@ python cisalhamento.py
 - **Triângulo**: [0,3], [-3,-2], [3,-2]
 - **Casa**: [-2,-2], [2,-2], [2,1], [0,3], [-2,1]
 
+### Interface Moderna
+- **Tema Dark**: Interface profissional com tema darkly do ttkbootstrap
+- **Header**: Título "Cisalhamento Geométrico" e instituição "CIESA · Computação Gráfica"
+- **Footer**: Legenda visual de cores (original, transformado, deslocamento)
+
 ### Controles da Interface
 - **Tipo de cisalhamento**: Horizontal, Vertical ou Ambos
-- **Fatores**: Sliders para ajustar shx e shy (range: -3.0 a 3.0)
+- **Fatores**: Sliders modernos para ajustar shx e shy (range: -3.0 a 3.0)
 - **Figura**: Seleção entre as três figuras disponíveis
 - **Visualização em tempo real**: Matriz de transformação e coordenadas dos vértices
+- **Botão Resetar**: Retorna todos os valores ao estado inicial
 
 ### Comportamento Esperado
 - Ao iniciar, exibe o quadrado com cisalhamento horizontal e fator `shx = 1.0`
+- Interface com tema darkly moderno e profissional
 - Sliders respondem em tempo real redesenhando o gráfico
 - Ao trocar o modo, os sliders são habilitados/desabilitados conforme necessário
 - A figura original permanece visível em cinza para comparação
 - Linhas pontilhadas mostram o deslocamento de cada vértice
+- Fontes Segoe UI para textos e Courier New para dados técnicos
 
 ## Estrutura do Projeto
 

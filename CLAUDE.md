@@ -48,15 +48,16 @@ Horizontal:        Vertical:
 | Python | 3.10+ | Linguagem base |
 | NumPy | latest | Cálculo matricial e transformações |
 | Matplotlib | latest | Renderização do plano cartesiano |
-| Tkinter | built-in | Interface gráfica (janela, sliders, botões) |
+| ttkbootstrap | 1.20+ | Interface gráfica moderna com tema dark |
+| Tkinter | built-in | Base para ttkbootstrap |
 
 ### Instalação das dependências
 
 ```bash
-pip install numpy matplotlib
+pip install numpy matplotlib ttkbootstrap
 ```
 
-> Tkinter já vem incluído na instalação padrão do Python. Não requer instalação separada.
+> ttkbootstrap é uma biblioteca moderna que substitui o Tkinter padrão com componentes estilizados e temas profissionais.
 
 ---
 
@@ -98,26 +99,37 @@ FIGURAS = {
 }
 ```
 
-### Interface Tkinter
+### Interface ttkbootstrap
 
 ```
-Janela principal (root)
-├── Frame esquerdo — controles
-│   ├── LabelFrame "Tipo de cisalhamento"
-│   │   ├── Radiobutton: Horizontal
-│   │   ├── Radiobutton: Vertical
-│   │   └── Radiobutton: Ambos
-│   ├── LabelFrame "Fatores"
-│   │   ├── Scale (slider) shx  [-3.0 a 3.0]
-│   │   └── Scale (slider) shy  [-3.0 a 3.0]
-│   ├── LabelFrame "Figura"
-│   │   ├── Radiobutton: Quadrado
-│   │   ├── Radiobutton: Triângulo
-│   │   └── Radiobutton: Casa
-│   ├── Label — exibe a matriz de transformação aplicada
-│   └── Label — exibe as coordenadas transformadas dos vértices
-└── Frame direito — canvas
-    └── FigureCanvasTkAgg (Matplotlib embutido no Tkinter)
+Janela principal (ttk.Window com tema darkly)
+├── Header — título e instituição
+├── Frame principal
+│   ├── Frame esquerdo — controles
+│   │   ├── LabelFrame "Controles"
+│   │   │   ├── LabelFrame "Tipo de cisalhamento"
+│   │   │   │   ├── Radiobutton: Horizontal
+│   │   │   │   ├── Radiobutton: Vertical
+│   │   │   │   └── Radiobutton: Ambos
+│   │   │   ├── LabelFrame "Fatores"
+│   │   │   │   ├── Label: shx
+│   │   │   │   ├── Scale (slider) shx  [-3.0 a 3.0]
+│   │   │   │   ├── Label: valor shx
+│   │   │   │   ├── Label: shy
+│   │   │   │   ├── Scale (slider) shy  [-3.0 a 3.0]
+│   │   │   │   └── Label: valor shy
+│   │   │   ├── LabelFrame "Figura"
+│   │   │   │   ├── Radiobutton: Quadrado
+│   │   │   │   ├── Radiobutton: Triângulo
+│   │   │   │   └── Radiobutton: Casa
+│   │   │   ├── Button: Resetar
+│   │   │   ├── LabelFrame "Matriz de Transformação"
+│   │   │   │   └── Label: matriz formatada (Courier New)
+│   │   │   └── LabelFrame "Coordenadas Transformadas"
+│   │   │       └── Label: coordenadas (Courier New)
+│   │   └── Frame direito — canvas
+│   │       └── FigureCanvasTkAgg (Matplotlib embutido)
+└── Footer — legenda de cores
 ```
 
 ### Fluxo de execução
@@ -167,11 +179,14 @@ python cisalhamento.py
 ## Comportamento esperado da interface
 
 - Ao iniciar, exibe o **quadrado** com **cisalhamento horizontal** e fator `shx = 1.0`
+- Interface com tema **darkly** moderno e profissional
 - Sliders respondem em tempo real redesenhando o gráfico
 - Ao trocar o modo para **Vertical**, o slider `shx` é desabilitado e `shy` é ativado
 - No modo **Ambos**, os dois sliders ficam ativos simultaneamente
 - A matriz de transformação é atualizada dinamicamente na interface
 - As coordenadas dos vértices transformados são exibidas com 2 casas decimais
+- **Botão Resetar** retorna todos os valores ao estado inicial
+- **Footer** com legenda visual de cores (original, transformado, deslocamento)
 
 ---
 
@@ -188,6 +203,9 @@ python cisalhamento.py
 
 - O projeto é **acadêmico e introdutório** — priorizar clareza sobre performance
 - Toda a lógica deve estar em **um único arquivo** `cisalhamento.py`
-- Usar `FigureCanvasTkAgg` para embutir o gráfico Matplotlib dentro da janela Tkinter
+- Usar `ttkbootstrap` com tema **darkly** para interface moderna e profissional
+- Usar `FigureCanvasTkAgg` para embutir o gráfico Matplotlib dentro da janela ttkbootstrap
 - O canvas Matplotlib deve ser redesenhado a cada interação do usuário via `canvas.draw()`
 - Manter a figura original sempre visível em cinza para comparação visual
+- Implementar **header** com título e instituição, e **footer** com legenda de cores
+- Usar fontes **Segoe UI** para textos e **Courier New** para dados técnicos
