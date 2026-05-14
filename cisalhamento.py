@@ -1,33 +1,32 @@
 #!/usr/bin/env python3
 """
-Cisalhamento Geométrico - Transformações 2D
-Projeto acadêmico para demonstrar cisalhamento horizontal e vertical
+Cisalhamento Geométrico - Transformações 2D com Eel
+Backend Python para interface web moderna com HTML/CSS/JS
+
+Este módulo implementa as transformações geométricas de cisalhamento (shear) 
+horizontal e vertical sobre figuras 2D no plano cartesiano. As transformações 
+são calculadas usando coordenadas homogêneas e matrizes 3×3.
+
+Fórmulas implementadas:
+    Cisalhamento Horizontal: x' = x + shx·y, y' = y
+    Cisalhamento Vertical:   x' = x, y' = y + shy·x
+
+O módulo utiliza Eel para comunicação entre backend Python (NumPy) e 
+frontend web (HTML/CSS/JavaScript com Canvas API).
+
+Uso:
+    python cisalhamento.py
+    
+    Abre uma janela com interface web em http://localhost:8000
 """
 
+import eel
 import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-import ttkbootstrap as ttk
-from ttkbootstrap.constants import *
-import tkinter as tk
 
-# Configurar tema dark do matplotlib
-plt.style.use('dark_background')
+# Inicializar Eel apontando para a pasta web
+eel.init('web')
 
-# Cores do tema
-CORES = {
-    'fundo': '#1e1e2e',
-    'painel': '#2a2a3e',
-    'header': '#181825',
-    'grid': '#313244',
-    'original': '#6c7086',
-    'transformado': '#89b4fa',
-    'deslocamento': '#f38ba8',
-    'texto': '#cdd6f4',
-    'texto_secundario': '#a6adc8'
-}
-
-# Figuras disponíveis
+# Figuras disponíveis (vértices em coordenadas cartesianas)
 FIGURAS = {
     "Quadrado": [(-2, -2), (2, -2), (2, 2), (-2, 2)],
     "Triângulo": [(0, 3), (-3, -2), (3, -2)],
@@ -35,7 +34,34 @@ FIGURAS = {
 }
 
 def cisalhamento_horizontal(pontos: np.ndarray, shx: float) -> np.ndarray:
-    """Aplica x' = x + shx·y para cada vértice."""
+    """
+    Aplica a transformação de cisalhamento horizontal aos vértices.
+    
+    A transformação horizontal desloca cada ponto proporcionalmente à sua 
+    coordenada Y, mantendo a coordenada Y inalterada.
+    
+    Fórmula: x' = x + shx·y, y' = y
+    
+    Matriz de transformação (coordenadas homogêneas):
+        ⎡ 1  shx  0 ⎤
+        ⎢ 0   1   0 ⎥
+        ⎣ 0   0   1 ⎦
+    
+    Args:
+        pontos: Array NumPy com shape (n, 2) contendo as coordenadas (x, y).
+        shx: Fator de cisalhamento horizontal. Valores maiores causam maior deformação.
+    
+    Returns:
+        Array NumPy com shape (n, 2) contendo as coordenadas transformadas.
+    
+    Exemplo:
+        >>> pontos = np.array([[0, 0], [1, 0], [1, 1]])
+        >>> resultado = cisalhamento_horizontal(pontos, 1.0)
+        >>> resultado
+        array([[0., 0.],
+               [1., 0.],
+               [2., 1.]])
+    """
     matriz = np.array([
         [1, shx, 0],
         [0, 1, 0],
@@ -45,14 +71,42 @@ def cisalhamento_horizontal(pontos: np.ndarray, shx: float) -> np.ndarray:
     # Converter para coordenadas homogêneas
     pontos_homogeneos = np.column_stack([pontos, np.ones(len(pontos))])
     
-    # Aplicar transformação
+    # Aplicar transformação: P' = P · M^T
     transformados = pontos_homogeneos @ matriz.T
     
-    # Retornar apenas coordenadas x, y
+    # Retornar apenas coordenadas x, y (descartar homogêneas)
     return transformados[:, :2]
 
+
 def cisalhamento_vertical(pontos: np.ndarray, shy: float) -> np.ndarray:
-    """Aplica y' = y + shy·x para cada vértice."""
+    """
+    Aplica a transformação de cisalhamento vertical aos vértices.
+    
+    A transformação vertical desloca cada ponto proporcionalmente à sua 
+    coordenada X, mantendo a coordenada X inalterada.
+    
+    Fórmula: x' = x, y' = y + shy·x
+    
+    Matriz de transformação (coordenadas homogêneas):
+        ⎡ 1   0   0 ⎤
+        ⎢ shy  1   0 ⎥
+        ⎣ 0   0   1 ⎦
+    
+    Args:
+        pontos: Array NumPy com shape (n, 2) contendo as coordenadas (x, y).
+        shy: Fator de cisalhamento vertical. Valores maiores causam maior deformação.
+    
+    Returns:
+        Array NumPy com shape (n, 2) contendo as coordenadas transformadas.
+    
+    Exemplo:
+        >>> pontos = np.array([[0, 0], [1, 0], [1, 1]])
+        >>> resultado = cisalhamento_vertical(pontos, 1.0)
+        >>> resultado
+        array([[0., 0.],
+               [1., 1.],
+               [1., 2.]])
+    """
     matriz = np.array([
         [1, 0, 0],
         [shy, 1, 0],
@@ -62,27 +116,67 @@ def cisalhamento_vertical(pontos: np.ndarray, shy: float) -> np.ndarray:
     # Converter para coordenadas homogêneas
     pontos_homogeneos = np.column_stack([pontos, np.ones(len(pontos))])
     
-    # Aplicar transformação
+    # Aplicar transformação: P' = P · M^T
     transformados = pontos_homogeneos @ matriz.T
     
-    # Retornar apenas coordenadas x, y
+    # Retornar apenas coordenadas x, y (descartar homogêneas)
     return transformados[:, :2]
 
+
 def aplicar_transformacao(pontos: np.ndarray, shx: float, shy: float, modo: str) -> np.ndarray:
-    """Combina horizontal e vertical (modo Ambos)."""
+    """
+    Aplica a transformação geométrica conforme o modo especificado.
+    
+    Disponibiliza três modos de transformação:
+    - Horizontal: Apenas cisalhamento horizontal (shx)
+    - Vertical:   Apenas cisalhamento vertical (shy)
+    - Ambos:      Cisalhamento horizontal E vertical sequencialmente
+    
+    Args:
+        pontos: Array NumPy com shape (n, 2) contendo as coordenadas (x, y).
+        shx: Fator de cisalhamento horizontal.
+        shy: Fator de cisalhamento vertical.
+        modo: Uma das strings: "Horizontal", "Vertical", "Ambos".
+    
+    Returns:
+        Array NumPy com shape (n, 2) contendo as coordenadas transformadas.
+    
+    Raises:
+        ValueError: Se modo não for um dos valores esperados.
+    """
     if modo == "Horizontal":
         return cisalhamento_horizontal(pontos, shx)
     elif modo == "Vertical":
         return cisalhamento_vertical(pontos, shy)
     elif modo == "Ambos":
         # Aplicar ambas as transformações sequencialmente
+        # Primeiro horizontal, depois vertical
         horizontal = cisalhamento_horizontal(pontos, shx)
         return cisalhamento_vertical(horizontal, shy)
     else:
-        return pontos.copy()
+        raise ValueError(f"Modo desconhecido: {modo}. Use 'Horizontal', 'Vertical' ou 'Ambos'.")
+
 
 def obter_matriz_transformacao(shx: float, shy: float, modo: str) -> np.ndarray:
-    """Retorna a matriz de transformação atual."""
+    """
+    Retorna a matriz 3×3 de transformação no modo especificado.
+    
+    As matrizes utilizam coordenadas homogêneas para representar 
+    transformações 2D de forma unificada.
+    
+    Args:
+        shx: Fator de cisalhamento horizontal.
+        shy: Fator de cisalhamento vertical.
+        modo: Uma das strings: "Horizontal", "Vertical", "Ambos".
+    
+    Returns:
+        Array NumPy com shape (3, 3) contendo a matriz de transformação.
+        
+    Referência:
+        Para o modo "Ambos", a matriz resultante é H · V onde:
+        - H é a matriz de cisalhamento horizontal
+        - V é a matriz de cisalhamento vertical
+    """
     if modo == "Horizontal":
         return np.array([
             [1, shx, 0],
@@ -96,7 +190,8 @@ def obter_matriz_transformacao(shx: float, shy: float, modo: str) -> np.ndarray:
             [0, 0, 1]
         ])
     elif modo == "Ambos":
-        # Matriz combinada
+        # Matriz combinada: H · V
+        # Resultado: aplicar horizontal primeiro, depois vertical
         return np.array([
             [1, shx, 0],
             [shy, 1 + shx * shy, 0],
@@ -105,293 +200,98 @@ def obter_matriz_transformacao(shx: float, shy: float, modo: str) -> np.ndarray:
     else:
         return np.eye(3)
 
-class CisalhamentoApp:
-    def __init__(self, root):
-        self.root = root
-        self.root.title("Cisalhamento Geométrico — CIESA")
-        self.root.geometry("1000x650")
-        self.root.minsize(1000, 650)
-        
-        # Configurar fontes
-        self.fonte_padrao = ('Segoe UI', 10)
-        self.fonte_titulo = ('Segoe UI', 12, 'bold')
-        self.fonte_mono = ('Courier New', 10)
-        self.fonte_mono_pequena = ('Courier New', 9)
-        
-        # Variáveis de controle
-        self.modo_var = tk.StringVar(value="Horizontal")
-        self.figura_var = tk.StringVar(value="Quadrado")
-        self.shx_var = tk.DoubleVar(value=1.0)
-        self.shy_var = tk.DoubleVar(value=0.0)
-        
-        # Criar interface
-        self.criar_interface()
-        
-        # Desenhar inicial
-        self.atualizar_visualizacao()
+
+@eel.expose
+def calcular(shx: float, shy: float, figura: str, modo: str) -> dict:
+    """
+    Calcula a transformação geométrica e retorna os dados formatados.
     
-    def criar_interface(self):
-        """Cria a interface gráfica com ttkbootstrap."""
-        # Frame principal
-        frame_principal = ttk.Frame(self.root)
-        frame_principal.pack(fill=BOTH, expand=True, padx=10, pady=10)
-        
-        # Criar header
-        self.criar_header()
-        
-        # Frame esquerdo - controles
-        frame_controles = ttk.LabelFrame(frame_principal, text="Controles")
-        frame_controles.pack(side=LEFT, fill=BOTH, padx=(0, 10))
-        
-        # Tipo de cisalhamento
-        frame_tipo = ttk.LabelFrame(frame_controles, text="Tipo de cisalhamento")
-        frame_tipo.pack(fill=X, padx=10, pady=(10, 5))
-        
-        self.criar_radiobutton_estilizado(frame_tipo, "Horizontal", 0, 0, self.modo_var, "Horizontal")
-        self.criar_radiobutton_estilizado(frame_tipo, "Vertical", 1, 0, self.modo_var, "Vertical")
-        self.criar_radiobutton_estilizado(frame_tipo, "Ambos", 2, 0, self.modo_var, "Ambos")
-        
-        # Fatores
-        frame_fatores = ttk.LabelFrame(frame_controles, text="Fatores")
-        frame_fatores.pack(fill=X, padx=10, pady=5)
-        
-        # Slider shx
-        ttk.Label(frame_fatores, text="shx:").grid(row=0, column=0, sticky=W, padx=5, pady=2)
-        self.slider_shx = ttk.Scale(frame_fatores, from_=-3.0, to=3.0, variable=self.shx_var,
-                                   orient=HORIZONTAL, length=200,
-                                   command=self.atualizar_visualizacao)
-        self.slider_shx.grid(row=0, column=1, padx=(5, 10), pady=2)
-        self.label_shx = ttk.Label(frame_fatores, text="1.00", width=6)
-        self.label_shx.grid(row=0, column=2, padx=(0, 5), pady=2)
-        
-        # Slider shy
-        ttk.Label(frame_fatores, text="shy:").grid(row=1, column=0, sticky=W, padx=5, pady=2)
-        self.slider_shy = ttk.Scale(frame_fatores, from_=-3.0, to=3.0, variable=self.shy_var,
-                                   orient=HORIZONTAL, length=200,
-                                   command=self.atualizar_visualizacao)
-        self.slider_shy.grid(row=1, column=1, padx=(5, 10), pady=2)
-        self.label_shy = ttk.Label(frame_fatores, text="0.00", width=6)
-        self.label_shy.grid(row=1, column=2, padx=(0, 5), pady=2)
-        
-        # Figura
-        frame_figura = ttk.LabelFrame(frame_controles, text="Figura")
-        frame_figura.pack(fill=X, padx=10, pady=5)
-        
-        self.criar_radiobutton_estilizado(frame_figura, "Quadrado", 0, 0, self.figura_var, "Quadrado")
-        self.criar_radiobutton_estilizado(frame_figura, "Triângulo", 1, 0, self.figura_var, "Triângulo")
-        self.criar_radiobutton_estilizado(frame_figura, "Casa", 2, 0, self.figura_var, "Casa")
-        
-        # Botão Resetar
-        self.botao_resetar = ttk.Button(frame_controles, text="Resetar",
-                                       command=self.resetar_valores)
-        self.botao_resetar.pack(pady=10, padx=10)
-        
-        # Matriz de transformação
-        frame_matriz = ttk.LabelFrame(frame_controles, text="Matriz de Transformação")
-        frame_matriz.pack(fill=X, padx=10, pady=5)
-        
-        self.label_matriz = tk.Label(frame_matriz, text="", font=self.fonte_mono, 
-                                    bg=CORES['painel'], fg=CORES['texto'], justify=LEFT)
-        self.label_matriz.pack(padx=5, pady=5)
-        
-        # Coordenadas transformadas
-        frame_coords = ttk.LabelFrame(frame_controles, text="Coordenadas Transformadas")
-        frame_coords.pack(fill=X, padx=10, pady=(5, 10))
-        
-        self.label_coords = tk.Label(frame_coords, text="", font=self.fonte_mono_pequena, 
-                                     bg=CORES['painel'], fg=CORES['texto'], justify=LEFT)
-        self.label_coords.pack(padx=5, pady=5)
-        
-        # Frame direito - canvas
-        frame_canvas = ttk.Frame(frame_principal)
-        frame_canvas.pack(side=RIGHT, fill=BOTH, expand=True)
-        
-        # Criar figura matplotlib
-        self.fig, self.ax = plt.subplots(figsize=(7, 7), facecolor=CORES['fundo'])
-        self.canvas = FigureCanvasTkAgg(self.fig, master=frame_canvas)
-        self.canvas.get_tk_widget().pack(fill=BOTH, expand=True)
-        
-        # Criar footer
-        self.criar_footer()
+    Esta função é exposta ao JavaScript via Eel e serve como ponto de 
+    entrada principal para o cálculo das transformações. Ela coordena:
+    1. Obtenção dos vértices da figura escolhida
+    2. Aplicação da transformação geométrica
+    3. Cálculo da matriz resultante
+    4. Formatação dos dados para retorno JSON
     
-    def atualizar_visualizacao(self, *args):
-        """Atualiza o gráfico e labels quando os controles mudam."""
-        modo = self.modo_var.get()
-        shx = self.shx_var.get()
-        shy = self.shy_var.get()
-        
-        # Atualizar labels dos sliders
-        self.label_shx.config(text=f"{shx:.2f}")
-        self.label_shy.config(text=f"{shy:.2f}")
-        
-        # Habilitar/desabilitar sliders conforme o modo
-        if modo == "Horizontal":
-            self.slider_shx.config(state="normal")
-            self.slider_shy.config(state="disabled")
-        elif modo == "Vertical":
-            self.slider_shx.config(state="disabled")
-            self.slider_shy.config(state="normal")
-        else:  # Ambos
-            self.slider_shx.config(state="normal")
-            self.slider_shy.config(state="normal")
-        
-        # Obter figura atual
-        nome_figura = self.figura_var.get()
-        pontos_originais = np.array(FIGURAS[nome_figura])
-        
-        # Aplicar transformação
-        pontos_transformados = aplicar_transformacao(pontos_originais, shx, shy, modo)
-        
-        # Limpar e redesenhar
-        self.ax.clear()
-        
-        # Configurar plano cartesiano com tema dark
-        self.ax.set_xlim(-8, 8)
-        self.ax.set_ylim(-8, 8)
-        self.ax.set_aspect('equal')
-        self.ax.set_facecolor(CORES['fundo'])
-        
-        # Grid sutil com linhas tracejadas
-        self.ax.grid(True, alpha=0.3, linestyle='--', color=CORES['grid'], linewidth=0.5)
-        
-        # Eixos principais
-        self.ax.axhline(y=0, color=CORES['texto_secundario'], linewidth=1, alpha=0.8)
-        self.ax.axvline(x=0, color=CORES['texto_secundario'], linewidth=1, alpha=0.8)
-        
-        # Configurar eixos com setas
-        self.ax.set_xlabel('X', color=CORES['texto'], fontsize=12)
-        self.ax.set_ylabel('Y', color=CORES['texto'], fontsize=12)
-        self.ax.set_title(f'Cisalhamento {modo} - {nome_figura}', 
-                         color=CORES['texto'], fontsize=14, pad=20)
-        
-        # Configurar ticks
-        self.ax.tick_params(colors=CORES['texto_secundario'])
-        
-        # Desenhar figura original (cinza tracejado com preenchimento transparente)
-        orig_closed = np.vstack([pontos_originais, pontos_originais[0]])
-        self.ax.fill(orig_closed[:, 0], orig_closed[:, 1], color=CORES['original'], 
-                     alpha=0.2, edgecolor=CORES['original'], linestyle='--', linewidth=1.5)
-        
-        # Desenhar figura transformada (azul sólido com preenchimento semitransparente)
-        trans_closed = np.vstack([pontos_transformados, pontos_transformados[0]])
-        self.ax.fill(trans_closed[:, 0], trans_closed[:, 1], color=CORES['transformado'], 
-                     alpha=0.4, edgecolor=CORES['transformado'], linewidth=2.5)
-        
-        # Desenhar linhas de deslocamento
-        for i in range(len(pontos_originais)):
-            self.ax.plot([pontos_originais[i, 0], pontos_transformados[i, 0]], 
-                        [pontos_originais[i, 1], pontos_transformados[i, 1]], 
-                        color=CORES['deslocamento'], alpha=0.5, linestyle=':', linewidth=1.5)
-        
-        # Marcar vértices com círculos preenchidos
-        self.ax.scatter(pontos_originais[:, 0], pontos_originais[:, 1], 
-                       c=CORES['original'], s=60, alpha=0.8, zorder=5, 
-                       edgecolors='white', linewidth=1)
-        self.ax.scatter(pontos_transformados[:, 0], pontos_transformados[:, 1], 
-                       c=CORES['transformado'], s=80, zorder=5, 
-                       edgecolors='white', linewidth=1.5)
-        
-        # Legenda no canto superior direito
-        self.ax.legend(['Original', 'Transformada'], loc='upper right', 
-                      facecolor=CORES['painel'], edgecolor=CORES['texto'],
-                      labelcolor=CORES['texto'], framealpha=0.9)
-        
-        # Adicionar setas nos eixos
-        self.ax.annotate('', xy=(7, 0), xytext=(6.5, 0),
-                        arrowprops=dict(arrowstyle='->', color=CORES['texto'], lw=2))
-        self.ax.annotate('', xy=(0, 7), xytext=(0, 6.5),
-                        arrowprops=dict(arrowstyle='->', color=CORES['texto'], lw=2))
-        
-        # Atualizar canvas
-        self.canvas.draw()
-        
-        # Atualizar matriz de transformação
-        matriz = obter_matriz_transformacao(shx, shy, modo)
-        matriz_str = "┌                     ┐\n"
-        matriz_str += f"│ {matriz[0,0]:7.2f} {matriz[0,1]:7.2f} {matriz[0,2]:7.2f} │\n"
-        matriz_str += f"│ {matriz[1,0]:7.2f} {matriz[1,1]:7.2f} {matriz[1,2]:7.2f} │\n"
-        matriz_str += f"│ {matriz[2,0]:7.2f} {matriz[2,1]:7.2f} {matriz[2,2]:7.2f} │\n"
-        matriz_str += "└                     ┘"
-        self.label_matriz.config(text=matriz_str)
-        
-        # Atualizar coordenadas
-        coords_str = ""
-        for i, (orig, trans) in enumerate(zip(pontos_originais, pontos_transformados)):
-            coords_str += f"P{i+1}: ({orig[0]:5.2f}, {orig[1]:5.2f}) → ({trans[0]:5.2f}, {trans[1]:5.2f})\n"
-        self.label_coords.config(text=coords_str.strip())
+    Args:
+        shx (float): Fator de cisalhamento horizontal. Intervalo: [-3, 3].
+        shy (float): Fator de cisalhamento vertical. Intervalo: [-3, 3].
+        figura (str): Nome da figura a transformar. Opções: "Quadrado", "Triângulo", "Casa".
+        modo (str): Tipo de cisalhamento. Opções: "Horizontal", "Vertical", "Ambos".
     
-    def criar_header(self):
-        """Cria o header fixo com título e instituição."""
-        header = ttk.Frame(self.root)
-        header.pack(fill=X)
-        
-        # Título à esquerda
-        titulo = ttk.Label(header, text="Cisalhamento Geométrico", 
-                          font=('Segoe UI', 16, 'bold'))
-        titulo.pack(side=LEFT, padx=20, pady=10)
-        
-        # Instituição à direita
-        instituicao = ttk.Label(header, text="CIESA · Computação Gráfica", 
-                              font=('Segoe UI', 12))
-        instituicao.pack(side=RIGHT, padx=20, pady=10)
+    Returns:
+        dict: Dicionário com a seguinte estrutura:
+            {
+                "original": [[x1, y1], [x2, y2], ...],  # Vértices originais
+                "transformado": [[x1', y1'], [x2', y2'], ...],  # Vértices após transformação
+                "matriz": [[m00, m01, m02], [m10, m11, m12], [m20, m21, m22]],  # Matriz 3×3
+                "coords": [  # Lista com informações de cada vértice
+                    {
+                        "label": "P1",
+                        "orig": [x, y],
+                        "trans": [x', y']
+                    },
+                    ...
+                ]
+            }
     
-    def criar_footer(self):
-        """Cria o footer com legenda de cores."""
-        footer = ttk.Frame(self.root)
-        footer.pack(fill=X, side=BOTTOM)
-        
-        # Legenda de cores
-        legenda_frame = ttk.Frame(footer)
-        legenda_frame.pack(expand=True)
-        
-        # Quadrado original
-        quad_original = tk.Canvas(legenda_frame, width=15, height=15, 
-                                  bg=CORES['header'], highlightthickness=0)
-        quad_original.create_rectangle(2, 2, 13, 13, fill=CORES['original'], 
-                                      outline=CORES['original'])
-        quad_original.grid(row=0, column=0, padx=5)
-        ttk.Label(legenda_frame, text="Original", 
-                 font=self.fonte_padrao).grid(row=0, column=1, padx=(0, 20))
-        
-        # Quadrado transformado
-        quad_transformado = tk.Canvas(legenda_frame, width=15, height=15, 
-                                     bg=CORES['header'], highlightthickness=0)
-        quad_transformado.create_rectangle(2, 2, 13, 13, fill=CORES['transformado'], 
-                                          outline=CORES['transformado'])
-        quad_transformado.grid(row=0, column=2, padx=5)
-        ttk.Label(legenda_frame, text="Transformado", 
-                 font=self.fonte_padrao).grid(row=0, column=3, padx=(0, 20))
-        
-        # Linha de deslocamento
-        linha_desloc = tk.Canvas(legenda_frame, width=15, height=15, 
-                                bg=CORES['header'], highlightthickness=0)
-        linha_desloc.create_line(2, 7, 13, 7, fill=CORES['deslocamento'], 
-                                width=2, dash=(2, 2))
-        linha_desloc.grid(row=0, column=4, padx=5)
-        ttk.Label(legenda_frame, text="Deslocamento", 
-                 font=self.fonte_padrao).grid(row=0, column=5)
+    Exemplos de uso (via JavaScript):
+        const resultado = await eel.calcular(1.0, 0.0, "Quadrado", "Horizontal")();
+        const resultado = await eel.calcular(0.0, 1.5, "Triângulo", "Vertical")();
+        const resultado = await eel.calcular(1.0, 1.0, "Casa", "Ambos")();
     
-    def criar_radiobutton_estilizado(self, parent, texto, linha, coluna, variavel, valor):
-        """Cria um radiobutton estilizado com ttkbootstrap."""
-        rb = ttk.Radiobutton(parent, text=texto, variable=variavel, value=valor,
-                           command=self.atualizar_visualizacao)
-        rb.grid(row=linha, column=coluna, sticky=W, pady=2, padx=5)
-        
-        return rb
+    Notas:
+        - Se a figura especificada não existir, usa "Quadrado" como padrão.
+        - Os valores das coordenadas são retornados como floats com precisão completa.
+        - A matriz retornada é sempre 3×3 (coordenadas homogêneas).
+    """
+    # 1. Obter vértices da figura escolhida
+    if figura not in FIGURAS:
+        figura = "Quadrado"
     
-    def resetar_valores(self):
-        """Reseta todos os valores para o estado inicial."""
-        self.modo_var.set("Horizontal")
-        self.figura_var.set("Quadrado")
-        self.shx_var.set(1.0)
-        self.shy_var.set(0.0)
-        self.atualizar_visualizacao()
+    pontos_originais = np.array(FIGURAS[figura])
+    
+    # 2. Aplicar transformação conforme o modo
+    pontos_transformados = aplicar_transformacao(pontos_originais, shx, shy, modo)
+    
+    # 3. Obter a matriz de transformação
+    matriz = obter_matriz_transformacao(shx, shy, modo)
+    
+    # 4. Formatar os dados para retorno JSON
+    result = {
+        "original": pontos_originais.tolist(),
+        "transformado": pontos_transformados.tolist(),
+        "matriz": matriz.tolist(),
+        "coords": [
+            {
+                "label": f"P{i+1}",
+                "orig": [float(orig[0]), float(orig[1])],
+                "trans": [float(trans[0]), float(trans[1])]
+            }
+            for i, (orig, trans) in enumerate(zip(pontos_originais, pontos_transformados))
+        ]
+    }
+    
+    return result
+
 
 def main():
-    """Função principal para executar a aplicação."""
-    root = ttk.Window(themename="darkly")
-    app = CisalhamentoApp(root)
-    root.mainloop()
+    """
+    Inicia o servidor Eel e abre a interface web.
+    
+    O servidor fica em execução esperando conexões. A janela da aplicação
+    será aberta automaticamente com a interface web em http://localhost:8000
+    
+    Atalhos úteis durante execução:
+        - Fechar a janela: Encerra o servidor Eel
+        - Atualizar página (F5): Recarrega a interface web
+        - Abrir DevTools (F12): Abre ferramentas de desenvolvedor
+    
+    Para interromper via terminal:
+        - Ctrl+C para parar o servidor
+    """
+    eel.start('index.html', size=(1100, 700))
 
-if __name__ == "__main__":
+
+if __name__ == '__main__':
     main()

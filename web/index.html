@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cisalhamento Geométrico</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>Cisalhamento Geométrico</h1>
+            <p class="subtitle">Transformações 2D - CIESA Manaus</p>
+        </header>
+
+        <!-- Main Content -->
+        <div class="main">
+            <!-- Controles (Esquerda) -->
+            <aside class="controls">
+                <div class="control-section">
+                    <h2>Controles</h2>
+                    
+                    <!-- Tipo de Cisalhamento -->
+                    <fieldset>
+                        <legend>Tipo de Cisalhamento</legend>
+                        <label>
+                            <input type="radio" name="modo" value="Horizontal" checked> Horizontal
+                        </label>
+                        <label>
+                            <input type="radio" name="modo" value="Vertical"> Vertical
+                        </label>
+                        <label>
+                            <input type="radio" name="modo" value="Ambos"> Ambos
+                        </label>
+                    </fieldset>
+
+                    <!-- Fatores -->
+                    <fieldset>
+                        <legend>Fatores</legend>
+                        <div class="slider-group">
+                            <label for="shx-slider">Fator Horizontal (shx)</label>
+                            <input type="range" id="shx-slider" min="-3" max="3" step="0.1" value="1" class="slider">
+                            <span id="shx-value">1.0</span>
+                        </div>
+                        <div class="slider-group">
+                            <label for="shy-slider">Fator Vertical (shy)</label>
+                            <input type="range" id="shy-slider" min="-3" max="3" step="0.1" value="0" class="slider">
+                            <span id="shy-value">0.0</span>
+                        </div>
+                    </fieldset>
+
+                    <!-- Figura -->
+                    <fieldset>
+                        <legend>Figura</legend>
+                        <label>
+                            <input type="radio" name="figura" value="Quadrado" checked> Quadrado
+                        </label>
+                        <label>
+                            <input type="radio" name="figura" value="Triângulo"> Triângulo
+                        </label>
+                        <label>
+                            <input type="radio" name="figura" value="Casa"> Casa
+                        </label>
+                    </fieldset>
+
+                    <!-- Botão Reset -->
+                    <button id="reset-btn" class="reset-btn">Resetar</button>
+
+                    <!-- Matriz de Transformação -->
+                    <fieldset>
+                        <legend>Matriz de Transformação</legend>
+                        <pre id="matriz" class="matrix-display">⎡ 1.0  1.0  0 ⎤
+⎢ 0.0  1.0  0 ⎥
+⎣ 0.0  0.0  1 ⎦</pre>
+                    </fieldset>
+
+                    <!-- Coordenadas Transformadas -->
+                    <fieldset>
+                        <legend>Coordenadas Transformadas</legend>
+                        <div id="coords" class="coords-display">
+                            <!-- Será preenchido por JavaScript -->
+                        </div>
+                    </fieldset>
+                </div>
+            </aside>
+
+            <!-- Canvas (Direita) -->
+            <main class="canvas-container">
+                <canvas id="canvas" width="700" height="700"></canvas>
+            </main>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color original"></div>
+                    <span>Figura Original</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color transformed"></div>
+                    <span>Figura Transformada</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color displacement"></div>
+                    <span>Deslocamento de Vértices</span>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Eel script -->
+    <script type="text/javascript" src="/eel.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
