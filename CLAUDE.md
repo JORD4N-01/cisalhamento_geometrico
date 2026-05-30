@@ -8,8 +8,8 @@ Arquivo de contexto do projeto para uso com Claude (IA). Descreve o propósito, 
 
 **Nome:** Cisalhamento Geométrico  
 **Tipo:** Projeto acadêmico — Computação Gráfica / Álgebra Linear  
-**Linguagem:** Python 3.10+  
-**Objetivo:** Implementar e visualizar interativamente as transformações geométricas de cisalhamento horizontal e vertical sobre figuras 2D no plano cartesiano.
+**Linguagem:** Python 3.10+ (Backend) + HTML/CSS/JavaScript (Frontend)  
+**Objetivo:** Implementar e visualizar interativamente as transformações geométricas de cisalhamento horizontal e vertical sobre figuras 2D no plano cartesiano através de uma interface web moderna.
 
 ---
 
@@ -45,52 +45,58 @@ Horizontal:        Vertical:
 
 | Tecnologia | Versão | Finalidade |
 |---|---|---|
-| Python | 3.10+ | Linguagem base |
+| Python | 3.10+ | Backend e cálculos |
 | NumPy | latest | Cálculo matricial e transformações |
-| Matplotlib | latest | Renderização do plano cartesiano |
-| ttkbootstrap | 1.20+ | Interface gráfica moderna com tema dark |
-| Tkinter | built-in | Base para ttkbootstrap |
+| Eel | latest | Comunicação entre Python e JavaScript |
+| HTML5/CSS3 | - | Markup e estilos da interface |
+| JavaScript (ES6+) | - | Lógica frontend e renderização Canvas |
+| Canvas API | - | Renderização 2D dos gráficos |
 
 ### Instalação das dependências
 
 ```bash
-pip install numpy matplotlib ttkbootstrap
+pip install numpy eel
 ```
 
-> ttkbootstrap é uma biblioteca moderna que substitui o Tkinter padrão com componentes estilizados e temas profissionais.
+> **Eel** é uma biblioteca que permite criar aplicações desktop com Python no backend e HTML/CSS/JavaScript no frontend, comunicando-se através de uma ponte nativa. O frontend roda em um navegador Chromium embutido.
 
 ---
 
 ## Estrutura do projeto
 
 ```
-cisalhamento/
-├── CLAUDE.md          # Este arquivo
-├── cisalhamento.py    # Arquivo principal
-├── README.md          # Documentação do projeto
-└── assets/            # Capturas de tela (opcional)
+cisalhamento_geometrico/
+├── CLAUDE.md              # Este arquivo — contexto para IA
+├── cisalhamento.py        # Backend Python com Eel
+├── README.md              # Documentação do projeto
+├── web/                   # Frontend web
+│   ├── index.html         # Página principal
+│   ├── style.css          # Estilos da interface
+│   └── script.js          # Lógica JavaScript e Canvas
+└── assets/                # Capturas de tela (opcional)
     └── preview.png
 ```
 
 ---
 
-## Estrutura do código (`cisalhamento.py`)
+## Arquitetura e Componentes
 
-### Funções matemáticas
+### Backend Python (`cisalhamento.py`)
 
-```python
-def cisalhamento_horizontal(pontos: np.ndarray, shx: float) -> np.ndarray:
-    """Aplica x' = x + shx·y para cada vértice."""
+Implementa a lógica matemática de transformações e serve uma API para o frontend via Eel.
 
-def cisalhamento_vertical(pontos: np.ndarray, shy: float) -> np.ndarray:
-    """Aplica y' = y + shy·x para cada vértice."""
+**Funções principais:**
+- `cisalhamento_horizontal(pontos, shx)` — Aplica x' = x + shx·y
+- `cisalhamento_vertical(pontos, shy)` — Aplica y' = y + shy·x
+- `aplicar_transformacao(pontos, shx, shy, modo)` — Orquestra as transformações
+- `obter_matriz_transformacao(shx, shy, modo)` — Retorna a matriz 3×3
+- `calcular(shx, shy, figura, modo)` — **Função exposta via Eel** — Calcula transformação e retorna JSON com:
+  - Vértices originais
+  - Vértices transformados
+  - Matriz de transformação
+  - Coordenadas formatadas de cada vértice
 
-def aplicar_transformacao(pontos: np.ndarray, shx: float, shy: float) -> np.ndarray:
-    """Combina horizontal e vertical (modo Ambos)."""
-```
-
-### Figuras disponíveis
-
+**Figuras disponíveis:**
 ```python
 FIGURAS = {
     "Quadrado":  [(-2,-2), (2,-2), (2,2), (-2,2)],
@@ -99,54 +105,75 @@ FIGURAS = {
 }
 ```
 
-### Interface ttkbootstrap
+### Frontend Web (`web/`)
 
+Interface moderna renderizada em Canvas API com comunicação via Eel.
+
+**Estrutura HTML (index.html):**
 ```
-Janela principal (ttk.Window com tema darkly)
-├── Header — título e instituição
-├── Frame principal
-│   ├── Frame esquerdo — controles
-│   │   ├── LabelFrame "Controles"
-│   │   │   ├── LabelFrame "Tipo de cisalhamento"
-│   │   │   │   ├── Radiobutton: Horizontal
-│   │   │   │   ├── Radiobutton: Vertical
-│   │   │   │   └── Radiobutton: Ambos
-│   │   │   ├── LabelFrame "Fatores"
-│   │   │   │   ├── Label: shx
-│   │   │   │   ├── Scale (slider) shx  [-3.0 a 3.0]
-│   │   │   │   ├── Label: valor shx
-│   │   │   │   ├── Label: shy
-│   │   │   │   ├── Scale (slider) shy  [-3.0 a 3.0]
-│   │   │   │   └── Label: valor shy
-│   │   │   ├── LabelFrame "Figura"
-│   │   │   │   ├── Radiobutton: Quadrado
-│   │   │   │   ├── Radiobutton: Triângulo
-│   │   │   │   └── Radiobutton: Casa
-│   │   │   ├── Button: Resetar
-│   │   │   ├── LabelFrame "Matriz de Transformação"
-│   │   │   │   └── Label: matriz formatada (Courier New)
-│   │   │   └── LabelFrame "Coordenadas Transformadas"
-│   │   │       └── Label: coordenadas (Courier New)
-│   │   └── Frame direito — canvas
-│   │       └── FigureCanvasTkAgg (Matplotlib embutido)
-└── Footer — legenda de cores
+<body>
+  <header>Título e Instituição</header>
+  <div class="main">
+    <aside class="controls">
+      - Seletor: Tipo de Cisalhamento (Horizontal/Vertical/Ambos)
+      - Sliders: shx [-3, 3], shy [-3, 3]
+      - Seletor: Figura (Quadrado/Triângulo/Casa)
+      - Botão: Resetar
+      - Exibição: Matriz de Transformação (3×3)
+      - Exibição: Coordenadas Transformadas
+    </aside>
+    <section class="canvas-container">
+      <canvas id="canvas"></canvas>
+    </section>
+  </div>
+  <footer>Legenda de cores</footer>
+</body>
 ```
 
-### Fluxo de execução
-
-```
-Usuário ajusta controle (slider / botão)
-        ↓
-callback() atualiza shx, shy, modo ou figura
-        ↓
-aplicar_transformacao() recalcula os vértices
-        ↓
-Matplotlib redesenha o plano:
+**Lógica JavaScript (script.js):**
+- Gerencia estado da aplicação (shx, shy, figura, modo)
+- Listeners em controles para atualizar estado
+- Chamadas assíncronas para `eel.calcular()` (backend Python)
+- Renderização Canvas:
+  - Grade cartesiana em cinza
   - Figura original em cinza tracejado
   - Figura transformada em azul sólido
-  - Linhas pontilhadas de deslocamento por vértice
+  - Linhas de deslocamento em vermelho
+
+**Estilos CSS (style.css):**
+- Tema dark profissional
+- Layout flexbox responsivo
+- Sliders e controles estilizados
+- Fonte Segoe UI para interface, Courier New para dados técnicos
+
+### Fluxo de execução (Eel Bridge)
+
+```
+Usuário interage com controle na página web
         ↓
-Labels atualizam a matriz e as coordenadas na interface
+JavaScript listener captura mudança (change/input event)
+        ↓
+Atualiza appState e valida valores
+        ↓
+Chamada assíncrona: await eel.calcular(shx, shy, figura, modo)()
+        ↓
+[PONTE EEL]
+        ↓
+Python: função calcular() processa com NumPy
+        ↓
+Retorna JSON com dados calculados
+        ↓
+[PONTE EEL]
+        ↓
+JavaScript recebe resultado
+        ↓
+Atualiza UI:
+  - Canvas redesenhado com requestAnimationFrame
+  - Figura original em cinza
+  - Figura transformada em azul
+  - Linhas de deslocamento em vermelho
+  - Matriz formatada
+  - Coordenadas listadas
 ```
 
 ---
@@ -165,28 +192,32 @@ Labels atualizam a matriz e as coordenadas na interface
 
 ```bash
 # Clonar ou baixar o projeto
-cd cisalhamento
+cd cisalhamento_geometrico
 
 # Instalar dependências
-pip install numpy matplotlib
+pip install numpy eel
 
 # Executar
 python cisalhamento.py
 ```
+
+O servidor Eel abrirá automaticamente uma janela com a interface web em `http://localhost:8000`.
 
 ---
 
 ## Comportamento esperado da interface
 
 - Ao iniciar, exibe o **quadrado** com **cisalhamento horizontal** e fator `shx = 1.0`
-- Interface com tema **darkly** moderno e profissional
-- Sliders respondem em tempo real redesenhando o gráfico
-- Ao trocar o modo para **Vertical**, o slider `shx` é desabilitado e `shy` é ativado
-- No modo **Ambos**, os dois sliders ficam ativos simultaneamente
-- A matriz de transformação é atualizada dinamicamente na interface
-- As coordenadas dos vértices transformados são exibidas com 2 casas decimais
-- **Botão Resetar** retorna todos os valores ao estado inicial
-- **Footer** com legenda visual de cores (original, transformado, deslocamento)
+- Interface web com tema **dark** moderno e profissional (Chromium embutido)
+- Sliders respondem em tempo real:
+  - Modo **Horizontal**: slider `shx` ativo, `shy` inativo (padrão 0)
+  - Modo **Vertical**: slider `shy` ativo, `shx` inativo (padrão 0)
+  - Modo **Ambos**: ambos sliders ativos
+- Canvas redesenha automaticamente ao detectar mudança (com debounce)
+- Matriz de transformação (3×3) atualizada dinamicamente
+- Coordenadas de cada vértice exibidas com precisão completa (floats)
+- **Botão Resetar**: retorna aos valores iniciais (shx=1, shy=0, Quadrado, Horizontal)
+- **Footer**: legenda visual com cores das linhas (cinza=original, azul=transformado, vermelho=deslocamento)
 
 ---
 
@@ -201,11 +232,13 @@ python cisalhamento.py
 
 ## Observações para o Claude
 
-- O projeto é **acadêmico e introdutório** — priorizar clareza sobre performance
-- Toda a lógica deve estar em **um único arquivo** `cisalhamento.py`
-- Usar `ttkbootstrap` com tema **darkly** para interface moderna e profissional
-- Usar `FigureCanvasTkAgg` para embutir o gráfico Matplotlib dentro da janela ttkbootstrap
-- O canvas Matplotlib deve ser redesenhado a cada interação do usuário via `canvas.draw()`
+- O projeto é **acadêmico e introdutório** — priorizar clareza e correteza matemática
+- **Backend** em `cisalhamento.py`: lógica pura com NumPy, funções expostas via `@eel.expose`
+- **Frontend** em `web/`: HTML5/CSS3 estruturado, JavaScript puro (sem frameworks)
+- Canvas API para renderização 2D — não usar bibliotecas gráficas adicionais
 - Manter a figura original sempre visível em cinza para comparação visual
-- Implementar **header** com título e instituição, e **footer** com legenda de cores
-- Usar fontes **Segoe UI** para textos e **Courier New** para dados técnicos
+- Implementar **header** com título "Cisalhamento Geométrico" e "CIESA Manaus"
+- Implementar **footer** com legenda de cores (original, transformado, deslocamento)
+- Usar **Segoe UI** para textos de interface, **Courier New** para dados técnicos
+- Garantir que a comunicação Eel seja assíncrona (`async/await` em JavaScript)
+- Valores de entrada: `shx, shy ∈ [-3, 3]` com step 0.1

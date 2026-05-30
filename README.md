@@ -1,6 +1,6 @@
 # Cisalhamento Geométrico
 
-Projeto acadêmico para demonstrar visualmente as transformações geométricas de cisalhamento horizontal e vertical sobre figuras 2D no plano cartesiano.
+Projeto acadêmico para demonstrar visualmente as transformações geométricas de cisalhamento horizontal e vertical sobre figuras 2D no plano cartesiano, com interface web moderna.
 
 ## Descrição
 
@@ -32,11 +32,12 @@ Horizontal:        Vertical:
 
 | Tecnologia | Versão | Finalidade |
 |---|---|---|
-| Python | 3.10+ | Linguagem base |
+| Python | 3.10+ | Backend e cálculos |
 | NumPy | latest | Cálculo matricial e transformações |
-| Matplotlib | latest | Renderização do plano cartesiano |
-| ttkbootstrap | 1.20+ | Interface gráfica moderna com tema dark |
-| Tkinter | built-in | Base para ttkbootstrap |
+| Eel | latest | Comunicação entre Python e JavaScript |
+| HTML5/CSS3 | - | Markup e estilos da interface |
+| JavaScript (ES6+) | - | Lógica frontend e renderização Canvas |
+| Canvas API | - | Renderização 2D dos gráficos |
 
 ## Instalação
 
@@ -48,10 +49,10 @@ cd cisalhamento_geometrico
 
 2. Instale as dependências:
 ```bash
-pip install numpy matplotlib ttkbootstrap
+pip install numpy eel
 ```
 
-> ttkbootstrap é uma biblioteca moderna que substitui o Tkinter padrão com componentes estilizados e temas profissionais.
+> **Eel** é uma biblioteca que permite criar aplicações desktop com Python no backend e HTML/CSS/JavaScript no frontend, comunicando-se através de uma ponte nativa.
 
 ## Como Executar
 
@@ -66,35 +67,58 @@ python cisalhamento.py
 - **Triângulo**: [0,3], [-3,-2], [3,-2]
 - **Casa**: [-2,-2], [2,-2], [2,1], [0,3], [-2,1]
 
+### Modos de Cisalhamento
+- **Horizontal**: Aplica x' = x + shx·y (deslocamento horizontal proporcional a Y)
+- **Vertical**: Aplica y' = y + shy·x (deslocamento vertical proporcional a X)
+- **Ambos**: Combina ambas as transformações sequencialmente
+
 ### Interface Moderna
-- **Tema Dark**: Interface profissional com tema darkly do ttkbootstrap
-- **Header**: Título "Cisalhamento Geométrico" e instituição "CIESA · Computação Gráfica"
+- **Tema Dark**: Interface profissional com Chromium embutido
+- **Header**: Título "Cisalhamento Geométrico" e instituição "CIESA · Manaus"
 - **Footer**: Legenda visual de cores (original, transformado, deslocamento)
+- **Canvas 2D**: Renderização em tempo real com:
+  - Grade cartesiana
+  - Figura original (cinza tracejado)
+  - Figura transformada (azul sólido)
+  - Linhas de deslocamento por vértice (vermelho)
 
 ### Controles da Interface
-- **Tipo de cisalhamento**: Horizontal, Vertical ou Ambos
-- **Fatores**: Sliders modernos para ajustar shx e shy (range: -3.0 a 3.0)
+- **Tipo de cisalhamento**: Seleção via radio buttons
+- **Fatores**: Sliders modernos para `shx` e `shy` (range: -3.0 a 3.0, step: 0.1)
 - **Figura**: Seleção entre as três figuras disponíveis
-- **Visualização em tempo real**: Matriz de transformação e coordenadas dos vértices
-- **Botão Resetar**: Retorna todos os valores ao estado inicial
+- **Visualização em tempo real**:
+  - Matriz de transformação 3×3 (coordenadas homogêneas)
+  - Coordenadas dos vértices com precisão completa
+- **Botão Resetar**: Retorna aos valores iniciais (shx=1, shy=0, Quadrado, Horizontal)
 
-### Comportamento Esperado
-- Ao iniciar, exibe o quadrado com cisalhamento horizontal e fator `shx = 1.0`
-- Interface com tema darkly moderno e profissional
-- Sliders respondem em tempo real redesenhando o gráfico
-- Ao trocar o modo, os sliders são habilitados/desabilitados conforme necessário
-- A figura original permanece visível em cinza para comparação
+## Comportamento Esperado
+
+- Ao iniciar, exibe o **quadrado** com **cisalhamento horizontal** e fator `shx = 1.0`
+- Interface web com tema **dark** moderno e profissional (Chromium embutido via Eel)
+- Sliders respondem em tempo real:
+  - Modo **Horizontal**: slider `shx` ativo, `shy` inativo
+  - Modo **Vertical**: slider `shy` ativo, `shx` inativo
+  - Modo **Ambos**: ambos sliders ativos
+- Canvas redesenha automaticamente ao detectar mudança
+- Figura original permanece visível em cinza para comparação
 - Linhas pontilhadas mostram o deslocamento de cada vértice
-- Fontes Segoe UI para textos e Courier New para dados técnicos
+- Matriz de transformação (3×3) atualizada dinamicamente
+- Coordenadas listadas com precisão completa (floats)
+- Fontes Segoe UI para textos de interface, Courier New para dados técnicos
 
 ## Estrutura do Projeto
 
 ```
 cisalhamento_geometrico/
-├── CLAUDE.md          # Contexto do projeto para IA
-├── cisalhamento.py    # Arquivo principal com toda a implementação
-├── README.md          # Documentação do projeto
-└── assets/            # Capturas de tela (opcional)
+├── CLAUDE.md              # Contexto do projeto para IA
+├── cisalhamento.py        # Backend Python com Eel
+├── README.md              # Este arquivo — Documentação do projeto
+├── web/                   # Frontend web
+│   ├── index.html         # Página principal (estrutura HTML)
+│   ├── style.css          # Estilos da interface (tema dark)
+│   └── script.js          # Lógica JavaScript e renderização Canvas
+└── assets/                # Capturas de tela (opcional)
+    └── preview.png
 ```
 
 ## Contexto Acadêmico
